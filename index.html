@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>中秋 · 五仁月饼</title>
+<style>
+  :root{
+    --gold-1:#ffe9b0;
+    --gold-2:#f7c451;
+    --gold-3:#c98a24;
+    --ink:#3a2408;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; margin:0; padding:0; overflow:hidden; }
+  body{
+    background:#04091c url("./images/background.webp") center center / cover no-repeat fixed;
+    font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif;
+    color:#ffeec4;
+    user-select:none; -webkit-user-select:none;
+    -webkit-touch-callout:none;
+  }
+  /* 让背景图在竖屏 / 横屏都居中不留白 */
+  .bgFix{
+    position:fixed; inset:0; z-index:0;
+    background:url("./images/background.webp") center center / cover no-repeat;
+    pointer-events:none;
+  }
+  .stage{ position:fixed; inset:0; z-index:1; }
+  #scene{ display:block; width:100%; height:100%; touch-action:none; cursor:grab; }
+  #scene.grabbing{ cursor:grabbing; }
+  #scene.pointing{ cursor:pointer; }
+
+  /* ---------- 顶部标题 ---------- */
+  .brand{
+    position:fixed; top:max(18px, env(safe-area-inset-top)); left:0; right:0; z-index:3;
+    text-align:center; pointer-events:none;
+    opacity:0; animation:fadeDown 1.4s ease .5s forwards;
+  }
+  .brand h1{
+    margin:0; font-size:clamp(15px,3.6vw,20px); font-weight:500; letter-spacing:.5em;
+    text-indent:.5em;
+    color:#ffe6b8;
+    text-shadow:0 0 12px rgba(255,196,90,.55), 0 2px 10px rgba(0,0,0,.6);
+  }
+  .brand p{
+    margin:8px 0 0; font-size:clamp(10px,2.4vw,12px); letter-spacing:.32em; text-indent:.32em;
+    color:rgba(214,232,255,.62);
+  }
+  @keyframes fadeDown{ from{ opacity:0; transform:translateY(-14px);} to{ opacity:1; transform:none;} }
+
+  /* ---------- 底部提示 ---------- */
+  .hint{
+    position:fixed; left:0; right:0; bottom:max(22px, env(safe-area-inset-bottom)); z-index:3;
+    text-align:center; pointer-events:none;
+    font-size:clamp(11px,2.7vw,13.5px); letter-spacing:.22em; text-indent:.22em;
+    color:rgba(255,231,182,.82);
+    text-shadow:0 0 14px rgba(255,180,70,.4), 0 2px 8px rgba(0,0,0,.7);
+    transition:opacity .45s ease, transform .45s ease;
+    opacity:0; animation:fadeUp 1.4s ease 1s forwards;
+  }
+  .hint .k{
+    display:inline-block; padding:2px 9px; margin:0 4px; border-radius:999px;
+    border:1px solid rgba(255,206,120,.5);
+    background:rgba(255,190,80,.12);
+    color:#ffd98a;
+  }
+  .hint.hide{ opacity:0 !important; transform:translateY(10px); }
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:none;} }
+
+  /* ---------- 长按进度环 ---------- */
+  .ring{
+    position:fixed; z-index:6; width:74px; height:74px; margin:-37px 0 0 -37px;
+    pointer-events:none; opacity:0; transform:scale(.82);
+    transition:opacity .18s ease, transform .18s ease;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ring.on{ opacity:1; transform:scale(1); }
+  .ring svg{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+  .ring circle{ fill:none; stroke-linecap:round; }
+  .ring .bgc{ stroke:rgba(255,224,168,.22); stroke-width:3.5; }
+  .ring .fgc{ stroke:url(#ringGrad); stroke-width:4.5; }
+  .ring .label{
+    position:relative; font-size:11px; letter-spacing:.18em; text-indent:.18em; color:#ffe3ab;
+    text-shadow:0 1px 6px rgba(0,0,0,.8);
+  }
+  .ring.done{ opacity:0; transform:scale(1.35); }
+
+  /* ---------- 左右切换按钮 ---------- */
+  .navBtn{
+    position:fixed; z-index:12; top:50%; transform:translateY(-50%);
+    width:54px; height:54px; border-radius:50%;
+    border:1.5px solid rgba(255,214,140,.72);
+    background:radial-gradient(circle at 50% 34%, rgba(92,54,16,.94), rgba(42,23,7,.94));
+    color:#ffe6ab; font-size:30px; line-height:1; font-family:inherit;
+    cursor:pointer; pointer-events:auto;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 0 1px rgba(255,214,140,.2) inset, 0 6px 22px rgba(0,0,0,.5), 0 0 26px rgba(255,178,60,.32);
+    transition:transform .2s ease, box-shadow .2s ease, background .2s ease, opacity .3s ease;
+    -webkit-user-select:none; user-select:none; opacity:0;
+    animation:fadeInBtn 1.2s ease 1.2s forwards;
+  }
+  @keyframes fadeInBtn{ from{opacity:0;} to{opacity:1;} }
+  .navBtn:hover{
+    background:radial-gradient(circle at 50% 34%, rgba(112,66,20,.97), rgba(52,29,9,.97));
+    box-shadow:0 0 0 1px rgba(255,214,140,.36) inset, 0 8px 26px rgba(0,0,0,.55), 0 0 42px rgba(255,196,80,.6);
+  }
+  .navBtn:active{ transform:translateY(-50%) scale(.9); }
+  .navLeft{ left:max(14px, env(safe-area-inset-left)); }
+  .navRight{ right:max(14px, env(safe-area-inset-right)); }
+
+  /* ---------- 打开月饼按钮 ---------- */
+  .openBtn{
+    position:fixed; z-index:7; left:50%; top:50%;
+    transform:translate(-50%,-50%) scale(.4);
+    opacity:0; pointer-events:none;
+    padding:13px 34px; border-radius:999px; border:1.5px solid rgba(255,224,150,.85);
+    background:linear-gradient(160deg,#4a2c0c 0%,#7a4a12 45%,#3a2107 100%);
+    color:#ffe9b4; font-size:16px; letter-spacing:.22em; text-indent:.22em;
+    font-family:inherit; font-weight:600; cursor:pointer;
+    box-shadow:0 0 0 1px rgba(255,214,140,.25) inset, 0 10px 34px rgba(0,0,0,.55), 0 0 34px rgba(255,178,60,.55);
+    transition:transform .45s cubic-bezier(.2,1.5,.4,1), opacity .32s ease, box-shadow .3s ease;
+  }
+  .openBtn::after{
+    content:""; position:absolute; inset:-9px; border-radius:999px;
+    border:1px solid rgba(255,204,116,.35); animation:pulse 2.2s ease-in-out infinite;
+  }
+  .openBtn.show{ opacity:1; transform:translate(-50%,-50%) scale(1); pointer-events:auto; }
+  .openBtn:hover{ box-shadow:0 0 0 1px rgba(255,214,140,.35) inset, 0 12px 38px rgba(0,0,0,.6), 0 0 52px rgba(255,196,80,.85); }
+  .openBtn:active{ transform:translate(-50%,-50%) scale(.94); }
+  @keyframes pulse{ 0%,100%{ opacity:.25; transform:scale(1);} 50%{ opacity:.7; transform:scale(1.06);} }
+
+  /* ---------- 祝福浮层 ---------- */
+  .overlay{
+    position:fixed; inset:0; z-index:9; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at 50% 45%, rgba(255,176,60,.18), rgba(3,7,20,.72) 62%, rgba(2,4,14,.9));
+    backdrop-filter:blur(3px);
+    opacity:0; pointer-events:none; transition:opacity .7s ease;
+  }
+  .overlay.show{ opacity:1; pointer-events:auto; }
+  .card{
+    position:relative; text-align:center; padding:8px 10px;
+    transform:scale(.86); transition:transform 1s cubic-bezier(.16,1,.3,1);
+  }
+  .overlay.show .card{ transform:scale(1); }
+  .card .big{
+    font-family:"KaiTi","STKaiti","Kaiti SC","Microsoft YaHei",serif;
+    font-size:clamp(46px,13vw,104px); font-weight:700; letter-spacing:.12em; text-indent:.12em;
+    line-height:1.16;
+    background:linear-gradient(180deg,#fff6d8 4%,#ffd873 38%,#f0ad33 66%,#ffe8b0 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 0 26px rgba(255,186,74,.75)) drop-shadow(0 4px 14px rgba(0,0,0,.6));
+    opacity:0; animation:none;
+  }
+  .overlay.show .card .big{ animation:bigIn 1.15s cubic-bezier(.16,1,.3,1) .18s forwards; }
+  @keyframes bigIn{
+    from{ opacity:0; transform:translateY(26px) scale(.9); filter:blur(10px) drop-shadow(0 0 40px rgba(255,190,80,.9)); }
+    to{ opacity:1; transform:none; filter:blur(0) drop-shadow(0 0 26px rgba(255,186,74,.75)) drop-shadow(0 4px 14px rgba(0,0,0,.6)); }
+  }
+  .card .sub{
+    margin-top:20px; font-size:clamp(12px,3.2vw,16px); letter-spacing:.42em; text-indent:.42em;
+    color:#ffe2a8; text-shadow:0 0 16px rgba(255,180,70,.55), 0 2px 8px rgba(0,0,0,.7);
+    opacity:0; animation:none;
+  }
+  .overlay.show .card .sub{ animation:fadeUp .9s ease .85s forwards; }
+  .card .line{
+    width:0; height:1px; margin:26px auto 0;
+    background:linear-gradient(90deg,transparent,rgba(255,214,140,.85),transparent);
+    transition:width 1.2s ease .9s;
+  }
+  .overlay.show .card .line{ width:min(320px,72vw); }
+  .again{
+    margin-top:26px; padding:10px 26px; border-radius:999px; cursor:pointer;
+    border:1px solid rgba(255,214,140,.6); background:rgba(255,190,80,.1);
+    color:#ffe4ac; font-family:inherit; font-size:13.5px; letter-spacing:.24em; text-indent:.24em;
+    opacity:0; animation:none; transition:background .25s ease, box-shadow .25s ease;
+  }
+  .overlay.show .again{ animation:fadeUp .9s ease 1.15s forwards; }
+  .again:hover{ background:rgba(255,190,80,.22); box-shadow:0 0 26px rgba(255,180,70,.45); }
+
+  /* 金色粒子 */
+  .spark{
+    position:absolute; width:6px; height:6px; border-radius:50%;
+    background:radial-gradient(circle,#fff3c9 0%,#ffbe4d 45%,rgba(255,180,60,0) 72%);
+    box-shadow:0 0 8px rgba(255,190,80,.85);
+    opacity:0; pointer-events:none;
+  }
+  .overlay.show .spark{ animation:rise var(--dur,6s) linear var(--delay,0s) infinite; }
+  @keyframes rise{
+    0%{ opacity:0; transform:translateY(16px) scale(.4); }
+    18%{ opacity:.95; }
+    75%{ opacity:.7; }
+    100%{ opacity:0; transform:translateY(calc(-1 * var(--dist,220px))) scale(1.15); }
+  }
+
+  /* ---------- 加载 ---------- */
+  .loader{
+    position:fixed; inset:0; z-index:20; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:18px; background:#04091c;
+    transition:opacity .8s ease; letter-spacing:.3em; text-indent:.3em; font-size:12.5px; color:#ffdd9a;
+  }
+  .loader.off{ opacity:0; pointer-events:none; }
+  .loader .spin{
+    width:34px; height:34px; border-radius:50%;
+    border:2px solid rgba(255,214,140,.2); border-top-color:#ffd376;
+    animation:spin 1s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .err{ position:fixed; inset:0; z-index:30; display:none; align-items:center; justify-content:center;
+        padding:30px; text-align:center; background:#04091c; color:#ffd9a2; line-height:1.9; font-size:14px; }
+</style>
+</head>
+<body>
+  <div class="bgFix"></div>
+
+  <div class="brand">
+    <h1 id="brandName">五仁月饼</h1>
+    <p>MID-AUTUMN MOONCAKE</p>
+  </div>
+
+  <button class="navBtn navLeft" id="prevBtn" aria-label="上一种月饼">‹</button>
+  <button class="navBtn navRight" id="nextBtn" aria-label="下一种月饼">›</button>
+
+  <div class="stage"><canvas id="scene"></canvas></div>
+
+  <div class="hint" id="hint">长按月饼 · 惊喜在里头</div>
+
+  <div class="ring" id="ring">
+    <svg viewBox="0 0 72 72">
+      <defs>
+        <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#fff0c4"/>
+          <stop offset="55%" stop-color="#ffc451"/>
+          <stop offset="100%" stop-color="#e79a22"/>
+        </linearGradient>
+      </defs>
+      <circle class="bgc" cx="36" cy="36" r="30"></circle>
+      <circle class="fgc" id="ringFg" cx="36" cy="36" r="30"></circle>
+    </svg>
+    <span class="label">长按</span>
+  </div>
+
+  <button class="openBtn" id="openBtn">打开月饼</button>
+
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <div class="big" id="bigText">中秋节快乐</div>
+      <div class="sub" id="subText">月 圆 · 人 圆 · 事 事 圆</div>
+      <div class="line"></div>
+      <button class="again" id="againBtn">再看一次</button>
+    </div>
+  </div>
+
+  <div class="loader" id="loader"><div class="spin"></div><div>正在准备月饼…</div></div>
+  <pre id="selftest" style="display:none"></pre>
+  <div class="err" id="err"><div>哎呀，当前浏览器无法渲染 3D 画面。<br>请换用 Chrome / Edge / Safari 最新版打开本页面。</div></div>
+
+<script src="./lib/three.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var canvas   = document.getElementById('scene');
+  var loader   = document.getElementById('loader');
+  var errBox   = document.getElementById('err');
+  var ringEl   = document.getElementById('ring');
+  var ringFg   = document.getElementById('ringFg');
+  var openBtn  = document.getElementById('openBtn');
+  var overlay  = document.getElementById('overlay');
+  var againBtn = document.getElementById('againBtn');
+  var hintEl   = document.getElementById('hint');
+  var prevBtn  = document.getElementById('prevBtn');
+  var nextBtn  = document.getElementById('nextBtn');
+  var brandName= document.getElementById('brandName');
+  var bigText  = document.getElementById('bigText');
+  var subText  = document.getElementById('subText');
+
+  if (typeof THREE === 'undefined') { loader.classList.add('off'); errBox.style.display = 'flex'; return; }
+
+  /* ============================================================
+   *  基础参数
+   * ============================================================ */
+  var H   = 0.35;   // 半高（薄饼）
+  var RB  = 1.03;   // 底面半径
+  var RT  = 1.03;   // 顶面半径（上下等宽，圆柱直筒造型）
+  var C   = 0.075;  // 倒角半径
+  var SEG = 128;
+  var rEq = (RB + RT) / 2;
+
+  /* ============================================================
+   *  渲染器 / 场景 / 相机
+   * ============================================================ */
+  var renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({
+      canvas: canvas, antialias: true, alpha: true, powerPreference: 'high-performance'
+    });
+  } catch (e) { loader.classList.add('off'); errBox.style.display = 'flex'; return; }
+
+  renderer.setClearAlpha(0);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.06;
+  if ('useLegacyLights' in renderer) renderer.useLegacyLights = false;
+
+  var scene = new THREE.Scene();
+  var FOV = 34;
+  var camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 100);
+  var camDir = new THREE.Vector3(0, 0.30, 1).normalize();
+
+  function layout() {
+    var w = window.innerWidth, h = window.innerHeight;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    var half = 1.92;                                    // 想看到的世界半高
+    var tv = half / Math.tan((FOV / 2) * Math.PI / 180);
+    var th = half / (Math.tan((FOV / 2) * Math.PI / 180) * camera.aspect);
+    var d  = Math.max(tv, th) * 0.94;
+    camera.position.copy(camDir.clone().multiplyScalar(d));
+    camera.lookAt(0, -0.32, 0);                         // 让月饼略偏画面中上方
+    camera.updateProjectionMatrix();
+    if (openBtn.classList.contains('show')) placeOpenBtn();
+  }
+
+  /* ============================================================
+   *  灯光
+   * ============================================================ */
+  scene.add(new THREE.HemisphereLight(0x8fb4f0, 0x3a2008, 0.5));
+
+  var key = new THREE.DirectionalLight(0xfff0d0, 2.0);
+  key.position.set(4.2, 6.0, 5.2);
+  scene.add(key);
+
+  var rim = new THREE.DirectionalLight(0x8ec2ff, 1.25);
+  rim.position.set(-5.0, 2.4, -4.2);
+  scene.add(rim);
+
+  var fill = new THREE.PointLight(0xffb654, 1.5, 14, 2);
+  fill.position.set(-2.2, 3.0, 3.4);
+  scene.add(fill);
+
+  var innerGlow = new THREE.PointLight(0xffc35e, 0, 4.2, 2);
+  innerGlow.position.set(0, 0.16, 0);
+
+  /* ============================================================
+   *  月饼口味配置（顺序即左右切换顺序）
+   * ============================================================ */
+  var FLAVORS = [
+    { key:'wuren',    name:'五仁', top2:'五仁',
+      fill:{ mode:'nuts',    base:['#e6cd9d','#d9bb86','#c3a066'] },
+      blessing:{ big:'中秋节快乐', sub:'五 谷 丰 登 · 团 圆 美 满' } },
+    { key:'dousha',   name:'豆沙', top2:'豆沙',
+      fill:{ mode:'smooth',  base:['#7a3520','#6a2a16','#511d0e'], speck:'#431608' },
+      blessing:{ big:'花好月圆',   sub:'甜 蜜 绵 沙 · 岁 岁 平 安' } },
+    { key:'lianrong', name:'莲蓉', top2:'莲蓉',
+      fill:{ mode:'smooth',  base:['#efe3bb','#e6d49c','#d6c083'], speck:'#cdb877' },
+      blessing:{ big:'莲 韵 中 秋', sub:'莲 子 清 甜 · 福 满 人 间' } },
+    { key:'zaoni',    name:'枣泥', top2:'枣泥',
+      fill:{ mode:'smooth',  base:['#6a2818','#561f12','#3c140b'], speck:'#2c0d06', streak:true },
+      blessing:{ big:'红 运 当 头', sub:'枣 香 浓 情 · 早 早 团 圆' } },
+    { key:'danhuang', name:'蛋黄', top2:'蛋黄',
+      fill:{ mode:'yolk',    base:['#efe2b4','#e7d49a','#dcc888'], yolk:'#f4b53a', yolkCore:'#df8c1e' },
+      blessing:{ big:'金 黄 满 月', sub:'蛋 黄 流 心 · 圆 圆 满 满' } },
+    { key:'yerong',   name:'椰蓉', top2:'椰蓉',
+      fill:{ mode:'coconut', base:['#f3ead2','#ece0c2','#dccba4'], fleck:'#fffaf0' },
+      blessing:{ big:'椰 风 送 福', sub:'椰 香 阵 阵 · 吉 祥 如 意' } }
+  ];
+
+  function easeOutBack(t) { var c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
+
+  /* ============================================================
+   *  纹理：月饼顶面印花
+   * ============================================================ */
+  function roundRectPath(g, x, y, w, h, r) {
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.lineTo(x + w - r, y); g.quadraticCurveTo(x + w, y, x + w, y + r);
+    g.lineTo(x + w, y + h - r); g.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    g.lineTo(x + r, y + h); g.quadraticCurveTo(x, y + h, x, y + h - r);
+    g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y);
+    g.closePath();
+  }
+
+  function makePatternTexture(top2) {
+    var S = 1024;
+    var cv = document.createElement('canvas'); cv.width = cv.height = S;
+    var g = cv.getContext('2d');
+    var cx = S / 2, cy = S / 2;
+
+    // —— 底色（烤制金黄，中心略浅）——
+    var base = g.createRadialGradient(cx, cy * 0.82, S * 0.05, cx, cy, S * 0.58);
+    base.addColorStop(0.00, '#dda45c');
+    base.addColorStop(0.45, '#cb8b3d');
+    base.addColorStop(0.80, '#b1702a');
+    base.addColorStop(1.00, '#96581c');
+    g.fillStyle = base; g.fillRect(0, 0, S, S);
+
+    // —— 烘焙斑驳感 ——
+    var i, a, r, x, y, rr, rg, dark;
+    for (i = 0; i < 300; i++) {
+      a = Math.random() * Math.PI * 2;
+      r = Math.sqrt(Math.random()) * S * 0.5;
+      x = cx + Math.cos(a) * r; y = cy + Math.sin(a) * r;
+      rr = 10 + Math.random() * 54;
+      dark = Math.random() > 0.34;
+      rg = g.createRadialGradient(x, y, 0, x, y, rr);
+      rg.addColorStop(0, dark ? 'rgba(106,58,12,0.15)' : 'rgba(255,214,148,0.12)');
+      rg.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = rg;
+      g.beginPath(); g.arc(x, y, rr, 0, Math.PI * 2); g.fill();
+    }
+
+    // —— 浮雕描边：先亮边（左上），再凹槽主色，最后暗影（右下）——
+    function engrave(fn, lw, darkA, lightA) {
+      g.save(); g.lineWidth = lw; g.strokeStyle = 'rgba(255,240,202,' + lightA + ')'; g.translate(-2.2, -2.6); fn(); g.restore();
+      g.save(); g.lineWidth = lw; g.strokeStyle = 'rgba(132,80,28,0.85)'; fn(); g.restore();
+      g.save(); g.lineWidth = lw; g.strokeStyle = 'rgba(82,42,8,' + darkA + ')'; g.translate(2.4, 3.0); fn(); g.restore();
+    }
+    function fillEngrave(fn, darkA, lightA) {
+      g.save(); g.fillStyle = 'rgba(255,240,202,' + lightA + ')'; g.translate(-2.2, -2.6); fn(); g.restore();
+      g.save(); g.fillStyle = 'rgba(132,80,28,0.85)'; fn(); g.restore();
+      g.save(); g.fillStyle = 'rgba(82,42,8,' + darkA + ')'; g.translate(2.4, 3.0); fn(); g.restore();
+    }
+
+    // 外圈双环
+    engrave(function () {
+      g.beginPath(); g.arc(cx, cy, 468, 0, Math.PI * 2); g.stroke();
+      g.beginPath(); g.arc(cx, cy, 448, 0, Math.PI * 2); g.stroke();
+    }, 5, 0.34, 0.34);
+
+    // 环形花瓣
+    var petals = 8, k;
+    for (k = 0; k < petals; k++) {
+      (function (k) {
+        var ang = (k / petals) * Math.PI * 2;
+        engrave(function () {
+          g.save();
+          g.translate(cx + Math.cos(ang) * 392, cy + Math.sin(ang) * 392);
+          g.rotate(ang);
+          g.beginPath(); g.ellipse(0, 0, 26, 62, 0, 0, Math.PI * 2); g.stroke();
+          g.beginPath(); g.ellipse(0, 0, 9, 40, 0, 0, Math.PI * 2); g.stroke();
+          g.restore();
+        }, 4, 0.30, 0.32);
+      })(k);
+    }
+    // 外圈圆点
+    for (k = 0; k < 24; k++) {
+      (function (k) {
+        var ang = (k / 24) * Math.PI * 2;
+        var px = cx + Math.cos(ang) * 490, py = cy + Math.sin(ang) * 490;
+        fillEngrave(function () { g.beginPath(); g.arc(px, py, 7, 0, Math.PI * 2); g.fill(); }, 0.32, 0.36);
+      })(k);
+    }
+
+    // 中央方框（传统印模）
+    var b = 244, rad = 46;
+    engrave(function () { roundRectPath(g, cx - b, cy - b, b * 2, b * 2, rad); g.stroke(); }, 7, 0.34, 0.34);
+    engrave(function () { roundRectPath(g, cx - b + 20, cy - b + 20, (b - 20) * 2, (b - 20) * 2, rad - 14); g.stroke(); }, 3.4, 0.26, 0.3);
+    // 四角饰
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (s) {
+      var px = cx + s[0] * (b - 44), py = cy + s[1] * (b - 44);
+      engrave(function () { g.beginPath(); g.arc(px, py, 15, 0, Math.PI * 2); g.stroke(); }, 4, 0.3, 0.32);
+      fillEngrave(function () { g.beginPath(); g.arc(px, py, 5, 0, Math.PI * 2); g.fill(); }, 0.3, 0.32);
+    });
+
+    // 中央印字（横排 2 字，避免俯视透视把竖排压扁）
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    var fontBig = '700 198px "Microsoft YaHei","SimHei","PingFang SC",sans-serif';
+    var fontSm  = '500 58px "Microsoft YaHei","SimHei","PingFang SC",sans-serif';
+
+    function stampText(txt, px, py, font, darkA, lightA) {
+      // 左上亮边
+      g.save(); g.font = font; g.translate(-2.4, -2.8); g.fillStyle = 'rgba(255,240,202,' + lightA + ')';
+      g.fillText(txt, px, py); g.restore();
+      // 字形主体（凹槽色）
+      g.save(); g.font = font; g.fillStyle = 'rgba(128,76,24,0.88)';
+      g.fillText(txt, px, py); g.restore();
+      // 右下暗影
+      g.save(); g.font = font; g.translate(2.6, 3.2); g.fillStyle = 'rgba(80,40,6,' + darkA + ')';
+      g.fillText(txt, px, py); g.restore();
+    }
+    if (top2 && top2.length >= 2) {
+      stampText(top2[0], cx - 122, cy - 40, fontBig, 0.5, 0.5);
+      stampText(top2[1], cx + 122, cy - 40, fontBig, 0.5, 0.5);
+    } else {
+      stampText(top2 || '饼', cx, cy - 30, fontBig, 0.5, 0.5);
+    }
+    stampText('月  饼', cx, cy + 156, fontSm, 0.48, 0.48);
+
+    var t = new THREE.CanvasTexture(cv);
+    t.encoding = THREE.sRGBEncoding;
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  }
+
+  /* ============================================================
+   *  纹理：侧面（竖条纹 + 上下烤深）
+   * ============================================================ */
+  function makeSideTexture() {
+    var W = 1024, Hh = 512;
+    var cv = document.createElement('canvas'); cv.width = W; cv.height = Hh;
+    var g = cv.getContext('2d');
+
+    g.fillStyle = '#b87c31'; g.fillRect(0, 0, W, Hh);
+
+    // 上下暗、中间亮的烘焙渐变
+    var vg = g.createLinearGradient(0, 0, 0, Hh);
+    vg.addColorStop(0.00, 'rgba(70,36,6,0.78)');
+    vg.addColorStop(0.10, 'rgba(104,56,14,0.42)');
+    vg.addColorStop(0.30, 'rgba(255,206,140,0.18)');
+    vg.addColorStop(0.50, 'rgba(255,218,158,0.24)');
+    vg.addColorStop(0.72, 'rgba(240,180,110,0.10)');
+    vg.addColorStop(0.90, 'rgba(110,58,14,0.40)');
+    vg.addColorStop(1.00, 'rgba(68,34,5,0.80)');
+    g.fillStyle = vg; g.fillRect(0, 0, W, Hh);
+
+    // 竖向棱纹
+    var n = 32, step = W / n, i;
+    for (i = 0; i < n; i++) {
+      var x0 = i * step;
+      var lg = g.createLinearGradient(x0, 0, x0 + step, 0);
+      lg.addColorStop(0.00, 'rgba(74,38,8,0.46)');
+      lg.addColorStop(0.18, 'rgba(255,222,164,0.24)');
+      lg.addColorStop(0.50, 'rgba(255,232,186,0.10)');
+      lg.addColorStop(0.82, 'rgba(102,54,12,0.18)');
+      lg.addColorStop(1.00, 'rgba(74,38,8,0.46)');
+      g.fillStyle = lg;
+      g.fillRect(x0, 0, step, Hh);
+    }
+
+    // 斑驳
+    for (i = 0; i < 420; i++) {
+      var x = Math.random() * W, y = Math.random() * Hh, r = 5 + Math.random() * 30;
+      var rg = g.createRadialGradient(x, y, 0, x, y, r);
+      var dk = Math.random() > 0.4;
+      rg.addColorStop(0, dk ? 'rgba(96,50,10,0.12)' : 'rgba(255,226,176,0.10)');
+      rg.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = rg; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    }
+
+    var t = new THREE.CanvasTexture(cv);
+    t.encoding = THREE.sRGBEncoding;
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  }
+
+  /* ============================================================
+   *  纹理：切面（五仁馅）
+   * ============================================================ */
+  function makeFillingTexture(fl) {
+    var S = 1024;
+    var cv = document.createElement('canvas'); cv.width = cv.height = S;
+    var g = cv.getContext('2d');
+    var cx = S / 2, cy = S / 2;
+
+    var fb = fl.fill.base;
+    var base = g.createRadialGradient(cx, cy, S * 0.04, cx, cy, S * 0.62);
+    base.addColorStop(0, fb[0]);
+    base.addColorStop(0.7, fb[1]);
+    base.addColorStop(1, fb[2]);
+    g.fillStyle = base; g.beginPath(); g.arc(cx, cy, S / 2, 0, Math.PI * 2); g.fill();
+
+    var mode = fl.fill.mode;
+
+    if (mode === 'nuts') {
+      // 糖浆 / 莲蓉底
+      for (var i = 0; i < 200; i++) {
+        var a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * S * 0.48;
+        var x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r, rr = 12 + Math.random() * 60;
+        var rg = g.createRadialGradient(x, y, 0, x, y, rr);
+        rg.addColorStop(0, Math.random() > 0.5 ? 'rgba(168,124,64,0.14)' : 'rgba(255,246,220,0.16)');
+        rg.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = rg; g.beginPath(); g.arc(x, y, rr, 0, Math.PI * 2); g.fill();
+      }
+      // 五仁颗粒：瓜子仁 / 核桃 / 杏仁 / 橄榄仁 / 花生碎 / 黑芝麻
+      var kinds = [
+        { c: '#f3e6c4', s: [16, 9],  n: 46, ring: '#c9b48a' },
+        { c: '#b9834f', s: [24, 18], n: 26, ring: '#8e5f33' },
+        { c: '#ecd7a8', s: [22, 13], n: 22, ring: '#c6ab7c' },
+        { c: '#dfc98f', s: [18, 11], n: 20, ring: '#bda668' },
+        { c: '#d8863f', s: [12, 10], n: 30, ring: '#a75f24' },
+        { c: '#4d3a24', s: [6, 4],   n: 70, ring: null }
+      ];
+      kinds.forEach(function (kind) {
+        for (var j = 0; j < kind.n; j++) {
+          var ang = Math.random() * Math.PI * 2;
+          var rad = Math.sqrt(Math.random()) * S * 0.45;
+          var px = cx + Math.cos(ang) * rad, py = cy + Math.sin(ang) * rad;
+          var rot = Math.random() * Math.PI;
+          var sx = kind.s[0] * (0.75 + Math.random() * 0.6);
+          var sy = kind.s[1] * (0.75 + Math.random() * 0.6);
+          g.save();
+          g.translate(px, py); g.rotate(rot);
+          g.shadowColor = 'rgba(84,54,18,0.45)'; g.shadowBlur = 7; g.shadowOffsetY = 3;
+          g.fillStyle = kind.c;
+          g.beginPath(); g.ellipse(0, 0, sx, sy, 0, 0, Math.PI * 2); g.fill();
+          g.shadowColor = 'transparent';
+          if (kind.ring) {
+            g.strokeStyle = kind.ring; g.lineWidth = 2;
+            g.beginPath(); g.ellipse(0, 0, sx * 0.82, sy * 0.72, 0, 0, Math.PI * 2); g.stroke();
+          }
+          g.restore();
+        }
+      });
+      // 青红丝
+      [['#d78d9b', 16], ['#9dc08b', 14]].forEach(function (pair) {
+        for (var j2 = 0; j2 < pair[1]; j2++) {
+          var ang = Math.random() * Math.PI * 2, rad = Math.sqrt(Math.random()) * S * 0.44;
+          var px = cx + Math.cos(ang) * rad, py = cy + Math.sin(ang) * rad;
+          g.save(); g.translate(px, py); g.rotate(Math.random() * Math.PI);
+          g.fillStyle = pair[0];
+          g.beginPath(); g.ellipse(0, 0, 26 + Math.random() * 14, 5, 0, 0, Math.PI * 2); g.fill();
+          g.restore();
+        }
+      });
+    } else if (mode === 'smooth') {
+      // 细沙质感：极淡暗斑 + 亮色细点（豆沙 / 莲蓉 / 枣泥）
+      for (var i2 = 0; i2 < 170; i2++) {
+        var a2 = Math.random() * Math.PI * 2, r2 = Math.sqrt(Math.random()) * S * 0.48;
+        var x2 = cx + Math.cos(a2) * r2, y2 = cy + Math.sin(a2) * r2, rr2 = 10 + Math.random() * 34;
+        var rg2 = g.createRadialGradient(x2, y2, 0, x2, y2, rr2);
+        rg2.addColorStop(0, 'rgba(0,0,0,0.10)');
+        rg2.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = rg2; g.beginPath(); g.arc(x2, y2, rr2, 0, Math.PI * 2); g.fill();
+      }
+      g.fillStyle = fl.fill.speck;
+      for (var i3 = 0; i3 < 150; i3++) {
+        var a3 = Math.random() * Math.PI * 2, r3 = Math.sqrt(Math.random()) * S * 0.46;
+        var x3 = cx + Math.cos(a3) * r3, y3 = cy + Math.sin(a3) * r3;
+        g.globalAlpha = 0.16;
+        g.beginPath(); g.arc(x3, y3, 2 + Math.random() * 5, 0, Math.PI * 2); g.fill();
+      }
+      g.globalAlpha = 1;
+      if (fl.fill.streak) {
+        g.strokeStyle = 'rgba(20,8,3,0.22)'; g.lineWidth = 2;
+        for (var i4 = 0; i4 < 64; i4++) {
+          var a4 = Math.random() * Math.PI * 2, r4 = Math.sqrt(Math.random()) * S * 0.44;
+          var x4 = cx + Math.cos(a4) * r4, y4 = cy + Math.sin(a4) * r4;
+          var ln = 20 + Math.random() * 60, ang4 = Math.random() * Math.PI;
+          g.beginPath(); g.moveTo(x4, y4);
+          g.lineTo(x4 + Math.cos(ang4) * ln, y4 + Math.sin(ang4) * ln); g.stroke();
+        }
+      }
+    } else if (mode === 'yolk') {
+      // 中心咸蛋黄（单黄，经典双黄可叠加）
+      function drawYolk(cxx, cyy, R) {
+        var yg = g.createRadialGradient(cxx - R * 0.3, cyy - R * 0.3, R * 0.1, cxx, cyy, R);
+        yg.addColorStop(0, '#ffd66a');
+        yg.addColorStop(0.45, fl.fill.yolk);
+        yg.addColorStop(1, fl.fill.yolkCore);
+        g.save();
+        g.shadowColor = 'rgba(150,90,20,0.5)'; g.shadowBlur = 12; g.shadowOffsetY = 5;
+        g.fillStyle = yg; g.beginPath(); g.arc(cxx, cyy, R, 0, Math.PI * 2); g.fill();
+        g.restore();
+        g.fillStyle = 'rgba(255,246,205,0.6)';
+        g.beginPath(); g.arc(cxx - R * 0.32, cyy - R * 0.32, R * 0.16, 0, Math.PI * 2); g.fill();
+      }
+      drawYolk(cx, cy, S * 0.30);
+      drawYolk(cx - S * 0.30, cy + S * 0.22, S * 0.16);
+    } else if (mode === 'coconut') {
+      // 白色椰丝絮状
+      g.lineCap = 'round';
+      for (var i5 = 0; i5 < 380; i5++) {
+        var a5 = Math.random() * Math.PI * 2, r5 = Math.sqrt(Math.random()) * S * 0.46;
+        var x5 = cx + Math.cos(a5) * r5, y5 = cy + Math.sin(a5) * r5;
+        var len = 14 + Math.random() * 30, ang5 = Math.random() * Math.PI;
+        var light = Math.random() > 0.25;
+        g.strokeStyle = light ? 'rgba(255,250,240,0.92)' : 'rgba(206,184,140,0.8)';
+        g.lineWidth = 2 + Math.random() * 2.6;
+        g.beginPath();
+        g.moveTo(x5, y5);
+        g.quadraticCurveTo(x5 + Math.cos(ang5) * len * 0.5, y5 + Math.sin(ang5) * len * 0.5 + 6,
+                           x5 + Math.cos(ang5) * len, y5 + Math.sin(ang5) * len);
+        g.stroke();
+      }
+    }
+
+    var t = new THREE.CanvasTexture(cv);
+    t.encoding = THREE.sRGBEncoding;
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  }
+
+  /* ============================================================
+   *  程序化光晕贴图
+   * ============================================================ */
+  function makeGlowTexture(stops) {
+    var S = 512;
+    var cv = document.createElement('canvas'); cv.width = cv.height = S;
+    var g = cv.getContext('2d');
+    var rg = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+    stops.forEach(function (s) { rg.addColorStop(s[0], s[1]); });
+    g.fillStyle = rg; g.fillRect(0, 0, S, S);
+    var t = new THREE.CanvasTexture(cv);
+    t.encoding = THREE.sRGBEncoding;
+    return t;
+  }
+
+  /* ============================================================
+   *  建模：五仁月饼
+   * ============================================================ */
+  var texSide = makeSideTexture();
+  var flavorTexTop  = FLAVORS.map(function (f) { return makePatternTexture(f.top2); });
+  var flavorTexFill = FLAVORS.map(function (f) { return makeFillingTexture(f); });
+
+  var matSide = new THREE.MeshPhysicalMaterial({
+    map: texSide, bumpMap: texSide, bumpScale: 0.05,
+    color: 0xf0d6ae, roughness: 0.52, metalness: 0.06,
+    clearcoat: 0.32, clearcoatRoughness: 0.45,
+    side: THREE.DoubleSide,
+    emissive: 0x1c0d02, emissiveIntensity: 0.35
+  });
+  var matTopCrust = new THREE.MeshPhysicalMaterial({
+    color: 0xc98f42, roughness: 0.58, metalness: 0.05,
+    clearcoat: 0.28, clearcoatRoughness: 0.5,
+    side: THREE.DoubleSide,
+    emissive: 0x1c0d02, emissiveIntensity: 0.35
+  });
+  var matPattern = new THREE.MeshPhysicalMaterial({
+    map: flavorTexTop[0], bumpMap: flavorTexTop[0], bumpScale: 0.026,
+    color: 0xf6e0bd, roughness: 0.5, metalness: 0.06,
+    clearcoat: 0.3, clearcoatRoughness: 0.45,
+    emissive: 0x1c0d02, emissiveIntensity: 0.3
+  });
+  var matFill = new THREE.MeshStandardMaterial({
+    map: flavorTexFill[0], bumpMap: flavorTexFill[0], bumpScale: 0.03,
+    roughness: 0.85, metalness: 0.0, side: THREE.DoubleSide,
+    emissive: 0x1c0d02, emissiveIntensity: 0.3
+  });
+
+  // ---- 剖面线（下半：底 → 赤道）----
+  function lowerProfile() {
+    var p = [];
+    p.push(new THREE.Vector2(0, -H));
+    p.push(new THREE.Vector2(RB - C, -H));
+    var cc = new THREE.Vector2(RB - C, -H + C), N = 14, i, a;
+    for (i = 1; i <= N; i++) {
+      a = -Math.PI / 2 + (i / N) * (Math.PI / 2);
+      p.push(new THREE.Vector2(cc.x + C * Math.cos(a), cc.y + C * Math.sin(a)));
+    }
+    p.push(new THREE.Vector2(rEq, 0));
+    return p;
+  }
+  // ---- 剖面线（上半：赤道 → 顶缘）----
+  function upperProfile() {
+    var p = [];
+    p.push(new THREE.Vector2(rEq, 0));
+    p.push(new THREE.Vector2(RT, H - C));
+    var cc = new THREE.Vector2(RT - C, H - C), N = 14, i, a;
+    for (i = 1; i <= N; i++) {
+      a = (i / N) * (Math.PI / 2);
+      p.push(new THREE.Vector2(cc.x + C * Math.cos(a), cc.y + C * Math.sin(a)));
+    }
+    return p;
+  }
+
+  var mooncake = new THREE.Group();
+  scene.add(mooncake);
+
+  var lowerHalf = new THREE.Group();
+  var upperHalf = new THREE.Group();
+  mooncake.add(lowerHalf);
+  mooncake.add(upperHalf);
+
+  // 下半身
+  var gLower = new THREE.LatheGeometry(lowerProfile(), SEG);
+  lowerHalf.add(new THREE.Mesh(gLower, matSide));
+  // 下半身切口（馅料）
+  var fillDisc = new THREE.Mesh(new THREE.CircleGeometry(rEq, 96), matFill);
+  fillDisc.rotation.x = -Math.PI / 2;
+  fillDisc.position.y = -0.001;
+  lowerHalf.add(fillDisc);
+
+  // 上半身
+  var gUpper = new THREE.LatheGeometry(upperProfile(), SEG);
+  upperHalf.add(new THREE.Mesh(gUpper, matSide));
+  // 顶面饼皮
+  var topCrust = new THREE.Mesh(new THREE.CircleGeometry(RT - C, 96), matTopCrust);
+  topCrust.rotation.x = -Math.PI / 2;
+  topCrust.position.y = H;
+  upperHalf.add(topCrust);
+  // 顶面印花
+  var patternDisc = new THREE.Mesh(new THREE.CircleGeometry(RT - C - 0.055, 96), matPattern);
+  patternDisc.rotation.x = -Math.PI / 2;
+  patternDisc.position.y = H + 0.006;
+  upperHalf.add(patternDisc);
+  // 顶面薄环（让印花与饼皮之间有立体过渡）
+  var rimRing = new THREE.Mesh(
+    new THREE.TorusGeometry(RT - C - 0.03, 0.012, 10, 96),
+    new THREE.MeshStandardMaterial({ color: 0xb87f3c, roughness: 0.8, metalness: 0.05 })
+  );
+  rimRing.rotation.x = Math.PI / 2;
+  rimRing.position.y = H - 0.004;
+  upperHalf.add(rimRing);
+
+  // 内芯微光
+  var pearl = new THREE.Mesh(
+    new THREE.SphereGeometry(0.2, 32, 24),
+    new THREE.MeshBasicMaterial({ color: 0xffe1a3, transparent: true, opacity: 0 })
+  );
+  pearl.position.set(0, 0.08, 0);
+  pearl.scale.setScalar(0.01);
+  mooncake.add(pearl);
+  mooncake.add(innerGlow);
+
+  /* ============================================================
+   *  环境：背后光晕 + 金色尘埃
+   * ============================================================ */
+  var halo = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: makeGlowTexture([
+      [0.00, 'rgba(255,214,132,0.55)'],
+      [0.28, 'rgba(255,178,72,0.26)'],
+      [0.62, 'rgba(120,150,255,0.08)'],
+      [1.00, 'rgba(0,0,0,0)']
+    ]),
+    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+  }));
+  halo.scale.set(5.6, 5.6, 1);
+  halo.position.set(0, 0.05, -1.35);
+  scene.add(halo);
+
+  var dustGeo = new THREE.BufferGeometry();
+  var DN = 90, dpos = new Float32Array(DN * 3);
+  for (var di = 0; di < DN; di++) {
+    var th0 = Math.random() * Math.PI * 2;
+    var ph0 = Math.acos(2 * Math.random() - 1);
+    var rr0 = 1.9 + Math.random() * 2.4;
+    dpos[di * 3 + 0] = rr0 * Math.sin(ph0) * Math.cos(th0);
+    dpos[di * 3 + 1] = rr0 * Math.cos(ph0) * 0.7;
+    dpos[di * 3 + 2] = rr0 * Math.sin(ph0) * Math.sin(th0);
+  }
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(dpos, 3));
+  var dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+    map: makeGlowTexture([[0, 'rgba(255,236,190,1)'], [0.35, 'rgba(255,196,90,0.55)'], [1, 'rgba(255,180,60,0)']]),
+    size: 0.085, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+  }));
+  scene.add(dust);
+
+  /* ============================================================
+   *  交互：拖拽转动 + 长按
+   * ============================================================ */
+  var PRESS_MS = 620;
+  var raycaster = new THREE.Raycaster();
+  var ndc = new THREE.Vector2();
+
+  var dragging = false, moved = false, pressed = false;
+  var lastX = 0, lastY = 0, startX = 0, startY = 0;
+  var velY = 0, velX = 0;
+  var pressTimer = null, ringStart = 0, ringRaf = 0;
+  var opened = false;
+  var pickables = [lowerHalf, upperHalf];
+
+  // —— 口味切换 ——
+  var cur = 0;
+  var curBlessing = FLAVORS[0].blessing;
+  var popOn = false, popStart = 0;
+
+  function applyFlavor(i) {
+    cur = ((i % FLAVORS.length) + FLAVORS.length) % FLAVORS.length;
+    var f = FLAVORS[cur];
+    matPattern.map = flavorTexTop[cur]; matPattern.bumpMap = flavorTexTop[cur]; matPattern.needsUpdate = true;
+    matFill.map = flavorTexFill[cur]; matFill.bumpMap = flavorTexFill[cur]; matFill.needsUpdate = true;
+    curBlessing = f.blessing;
+    if (brandName) brandName.textContent = f.name + '月饼';
+    cancelPress(); hideRing();
+    if (opened) { resetCake(); }
+    else if (openBtn.classList.contains('show')) { openBtn.classList.remove('show'); hintEl.classList.remove('hide'); }
+    popOn = true; popStart = performance.now();
+  }
+  if (prevBtn) prevBtn.addEventListener('click', function (e) { e.stopPropagation(); applyFlavor(cur - 1); });
+  if (nextBtn) nextBtn.addEventListener('click', function (e) { e.stopPropagation(); applyFlavor(cur + 1); });
+
+  function toNDC(e) {
+    var r = canvas.getBoundingClientRect();
+    ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+  }
+  function hitCake(e) {
+    toNDC(e);
+    raycaster.setFromCamera(ndc, camera);
+    return raycaster.intersectObjects(pickables, true).length > 0;
+  }
+
+  var RING_C = 2 * Math.PI * 30;
+  ringFg.style.strokeDasharray = RING_C;
+
+  function showRing(x, y) {
+    ringEl.style.left = x + 'px';
+    ringEl.style.top = y + 'px';
+    ringEl.classList.remove('done');
+    ringEl.classList.add('on');
+    ringStart = performance.now();
+    cancelAnimationFrame(ringRaf);
+    (function tick() {
+      var p = Math.min(1, (performance.now() - ringStart) / PRESS_MS);
+      ringFg.style.strokeDashoffset = String(RING_C * (1 - p));
+      if (p < 1) ringRaf = requestAnimationFrame(tick);
+    })();
+  }
+  function hideRing() {
+    cancelAnimationFrame(ringRaf);
+    ringEl.classList.remove('on');
+    ringFg.style.strokeDashoffset = String(RING_C);
+  }
+
+  function placeOpenBtn() {
+    var v = new THREE.Vector3(0, -0.62, 0).applyMatrix4(mooncake.matrixWorld);
+    v.project(camera);
+    var r = canvas.getBoundingClientRect();
+    var x = r.left + (v.x * 0.5 + 0.5) * r.width;
+    var y = r.top + (-v.y * 0.5 + 0.5) * r.height;
+    var m = 76;
+    x = Math.max(m, Math.min(window.innerWidth - m, x));
+    y = Math.max(m, Math.min(window.innerHeight - m - 10, y));
+    openBtn.style.left = x + 'px';
+    openBtn.style.top = y + 'px';
+  }
+
+  function revealOpenBtn() {
+    hideRing();
+    placeOpenBtn();
+    openBtn.classList.add('show');
+    hintEl.classList.add('hide');
+  }
+
+  function cancelPress() {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    if (pressed) { pressed = false; hideRing(); }
+  }
+
+  canvas.addEventListener('pointerdown', function (e) {
+    if (opened) return;
+    dragging = true; moved = false;
+    lastX = startX = e.clientX; lastY = startY = e.clientY;
+    canvas.classList.add('grabbing');
+    try { if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId); } catch (_) {}
+
+    if (hitCake(e)) {
+      pressed = true;
+      showRing(e.clientX, e.clientY);
+      pressTimer = setTimeout(function () {
+        pressTimer = null;
+        if (!moved && pressed) { pressed = false; ringEl.classList.add('done'); setTimeout(hideRing, 260); revealOpenBtn(); }
+      }, PRESS_MS);
+    }
+  });
+
+  canvas.addEventListener('pointermove', function (e) {
+    if (!dragging) {
+      if (!opened) canvas.classList.toggle('pointing', hitCake(e));
+      return;
+    }
+    var dx = e.clientX - lastX, dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    if (!moved && (Math.abs(e.clientX - startX) + Math.abs(e.clientY - startY)) > 6) {
+      moved = true;
+      cancelPress();
+      ringEl.classList.remove('on');
+    }
+    if (moved) {
+      velY = dx * 0.0062;
+      velX = dy * 0.0042;
+      mooncake.rotation.y += velY;
+      mooncake.rotation.x = Math.max(-0.62, Math.min(0.62, mooncake.rotation.x + velX));
+    }
+  });
+
+  function endDrag() {
+    dragging = false;
+    canvas.classList.remove('grabbing');
+    cancelPress();
+  }
+  canvas.addEventListener('pointerup', function () { endDrag(); });
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('pointerleave', function () { if (dragging) endDrag(); });
+  canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  window.addEventListener('blur', endDrag);
+
+  /* ============================================================
+   *  打开月饼
+   * ============================================================ */
+  var openAnim = 0;           // 0 → 1
+  var openStart = 0, animating = false;
+
+  function openCake() {
+    if (opened) return;
+    if (bigText) bigText.textContent = curBlessing.big;
+    if (subText) subText.textContent = curBlessing.sub;
+    opened = true;
+    openBtn.classList.remove('show');
+    animating = true;
+    openStart = performance.now();
+    spawnSparks();
+    setTimeout(function () { overlay.classList.add('show'); }, 620);
+  }
+  function resetCake() {
+    overlay.classList.remove('show');
+    openAnim = 0; openStart = performance.now(); animating = true; opened = false;
+    setOpenAmount(0);
+    hintEl.classList.remove('hide');
+  }
+  function easeOutBack(t) { var c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
+  function easeInOut(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+  function setOpenAmount(a) {
+    upperHalf.position.y = a * 0.86;
+    upperHalf.rotation.x = -a * 0.42;
+    upperHalf.rotation.z = a * 0.05;
+    pearl.material.opacity = Math.min(1, a * 1.6);
+    pearl.scale.setScalar(0.01 + a * 0.99);
+    pearl.position.y = 0.08 + a * 0.34;
+    innerGlow.intensity = a * 3.4;
+  }
+
+  openBtn.addEventListener('click', openCake);
+  againBtn.addEventListener('click', resetCake);
+
+  /* 金色粒子 */
+  function spawnSparks() {
+    var card = overlay.querySelector('.card');
+    for (var i = 0; i < 26; i++) {
+      if (overlay.querySelectorAll('.spark').length > 60) break;
+      var s = document.createElement('div');
+      s.className = 'spark';
+      var size = 3 + Math.random() * 7;
+      s.style.width = size + 'px'; s.style.height = size + 'px';
+      s.style.left = (Math.random() * 100) + '%';
+      s.style.top = (55 + Math.random() * 45) + '%';
+      s.style.setProperty('--dur', (4.5 + Math.random() * 4).toFixed(2) + 's');
+      s.style.setProperty('--delay', (Math.random() * 4).toFixed(2) + 's');
+      s.style.setProperty('--dist', (140 + Math.random() * 260).toFixed(0) + 'px');
+      card.appendChild(s);
+    }
+  }
+
+  /* ============================================================
+   *  主循环
+   * ============================================================ */
+  var clock = new THREE.Clock();
+  var dustT = 0;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.05);
+    dustT += dt;
+
+    // 惯性 + 自动缓慢旋转
+    if (!dragging && !opened) {
+      mooncake.rotation.y += velY;
+      mooncake.rotation.x = Math.max(-0.62, Math.min(0.62, mooncake.rotation.x + velX));
+      velY *= 0.93; velX *= 0.9;
+      var idle = 0.0022;
+      if (Math.abs(velY) < idle) mooncake.rotation.y += (idle - Math.abs(velY)) * 0.6;
+    } else if (opened) {
+      mooncake.rotation.y += velY * 0.55; velY *= 0.94;
+      mooncake.rotation.x = Math.max(-0.62, Math.min(0.62, mooncake.rotation.x + velX * 0.6));
+      velX *= 0.94;
+    } else {
+      mooncake.rotation.y += velY;
+      mooncake.rotation.x = Math.max(-0.62, Math.min(0.62, mooncake.rotation.x + velX));
+      velY *= 0.9; velX *= 0.9;
+    }
+
+    // 开合动画
+    if (animating) {
+      var t = (performance.now() - openStart) / (opened ? 1000 : 620);
+      if (t >= 1) { t = 1; animating = false; }
+      var e = opened ? easeInOut(t) : easeInOut(t);
+      openAnim = opened ? e : 1 - e;
+      setOpenAmount(openAnim);
+    }
+
+    // 切换口味换装弹跳
+    if (popOn) {
+      var pp = Math.min(1, (performance.now() - popStart) / 340);
+      mooncake.scale.setScalar(0.84 + 0.16 * easeOutBack(pp));
+      if (pp >= 1) { popOn = false; mooncake.scale.setScalar(1); }
+    }
+
+    // 悬浮呼吸
+    mooncake.position.y = Math.sin(dustT * 0.9) * 0.025;
+    halo.material.opacity = 0.85 + Math.sin(dustT * 1.4) * 0.12;
+    dust.rotation.y += dt * 0.06;
+    dust.position.y = Math.sin(dustT * 0.7) * 0.06;
+
+    renderer.render(scene, camera);
+
+    if (openBtn.classList.contains('show')) placeOpenBtn();
+  }
+
+  /* ============================================================
+   *  启动
+   * ============================================================ */
+  function runSelfTest() {
+    var out = [];
+    var bumpErr = [];
+    for (var i = 0; i < FLAVORS.length; i++) {
+      applyFlavor(i);
+      if (matPattern.bumpMap !== flavorTexTop[cur]) bumpErr.push(FLAVORS[i].name + ':topBump');
+      if (matFill.bumpMap !== flavorTexFill[cur]) bumpErr.push(FLAVORS[i].name + ':fillBump');
+      openCake();
+      out.push(FLAVORS[i].name + '|' + bigText.textContent + '|' + subText.textContent);
+      resetCake();
+    }
+    if (bumpErr.length) { document.title = 'SELFTEST_ERR:bumpMap!=current ' + bumpErr.join(','); return; }
+    var txt = out.join(' ;; ');
+    document.title = 'SELFTEST:' + txt;
+    var pre = document.getElementById('selftest');
+    if (pre) { pre.style.display = 'block'; pre.textContent = txt; }
+  }
+
+  layout();
+  applyFlavor(0);
+  setOpenAmount(0);
+  var fm = /flavor=(\d+)/.exec(location.search);
+  if (fm) { var fi = parseInt(fm[1], 10); if (fi >= 0 && fi < FLAVORS.length) applyFlavor(fi); }
+  window.addEventListener('resize', layout);
+  window.addEventListener('orientationchange', function () { setTimeout(layout, 220); });
+
+  renderer.compile(scene, camera);
+  animate();
+  setTimeout(function () { loader.classList.add('off'); }, 420);
+
+  if (/selftest/.test(location.search)) { try { runSelfTest(); } catch (e) { document.title = 'SELFTEST_ERR:' + e.message; } }
+})();
+</script>
+</body>
+</html>
