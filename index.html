@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="物理笔记 — 个人物理学习笔记与思考，by h^2q">
+<title>物理笔记 · by h^2q</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23c3a26a' stroke-width='3'%3E%3Cellipse cx='32' cy='32' rx='26' ry='10'/%3E%3Cellipse cx='32' cy='32' rx='26' ry='10' transform='rotate(60 32 32)'/%3E%3Cellipse cx='32' cy='32' rx='26' ry='10' transform='rotate(-60 32 32)'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='5' fill='%23c3a26a'/%3E%3C/svg%3E">
+<!-- ============================================================
+     使用说明（所有内容均在页面底部 <script> 的 SITE_CONFIG 中维护）：
+     1. 新增笔记：复制 SITE_CONFIG.notes 中的一个 { ... } 对象，修改
+        title / date / tags / desc / file（PDF 路径，建议放在 notes/ 目录）；
+        一篇笔记可带多个附件，改用 files: [{ name, path, dl }, ...] 数组，
+        其中 dl: true 表示点击后直接下载（适合 .md 等非 PDF 附件）。
+     2. 修改说明区文字：编辑 SITE_CONFIG.intro 数组（每个元素为一段）。
+     3. 新增友情链接：复制 SITE_CONFIG.links 中的一个 { ... } 对象。
+     4. 更换背景：替换同目录下的 background.jpeg。
+     5. 当前笔记条目为占位示例，替换 notes/note-01.pdf 为真实 PDF 即可。
+     {
+      title: "标题",
+      date: "日期",
+      tags: [],
+      desc: "",
+      file: “notes/文件.pdf”
+    },
+
+     {
+      title: "标题",
+      date: "日期",
+      tags: [],
+      desc: "",
+      files: [
+        { name: "阅读PDF", path: "notes/文件.pdf" },
+        { name: "markdown文件", path: "notes/文件.zip" }
+      ]
+    },
+============================================================ -->
+<style>
+  :root{
+    --panel: #151f33;                /* 实色面板 */
+    --border: rgba(255, 255, 255, 0.10);
+    --border-strong: rgba(255, 255, 255, 0.20);
+    --text: #e9ecf2;
+    --text-dim: #9aa5b8;
+    --accent: #c3a26a;               /* 唯一的点缀色：暗金 */
+    --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", "SimSun", serif;
+    --sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    font-family: var(--sans);
+    color: var(--text);
+    line-height: 1.7;
+    min-height: 100vh;
+    /* 主体内容在整窗口中居中；右侧友情链接为 fixed 悬浮层，不占文档流 */
+    background:
+      linear-gradient(rgba(7, 13, 27, 0.34), rgba(7, 13, 27, 0.60)),
+      url("background.jpeg") center center / cover no-repeat fixed,
+      #0a1220;
+  }
+  ::selection{ background: rgba(195, 162, 106, 0.30); color:#fff; }
+
+  /* ---------- 特色滚动条：原子轨道 ---------- */
+  html{
+    scrollbar-width: thin;
+    scrollbar-color: #d9b26e rgba(10, 18, 32, 0.55); /* Firefox */
+  }
+  ::-webkit-scrollbar{ width: 14px; }
+  ::-webkit-scrollbar-track{
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='38'%3E%3Cellipse cx='7' cy='19' rx='5.5' ry='15' fill='none' stroke='rgba(143,211,255,0.30)' stroke-width='1'/%3E%3Ccircle cx='7' cy='19' r='1.1' fill='rgba(230,193,122,0.40)'/%3E%3C/svg%3E") repeat-y,
+      rgba(10, 18, 32, 0.55);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  ::-webkit-scrollbar-thumb{
+    background: linear-gradient(180deg, rgba(143, 211, 255, 0.92), rgba(230, 193, 122, 0.92));
+    border-radius: 99px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 0 0 12px rgba(230, 193, 122, 0.35);
+  }
+  ::-webkit-scrollbar-thumb:hover{
+    background: linear-gradient(180deg, rgba(143, 211, 255, 1), rgba(230, 193, 122, 1));
+    background-clip: padding-box;
+    box-shadow: 0 0 18px rgba(230, 193, 122, 0.55);
+  }
+  /* 侧栏内嵌滚动条更纤细 */
+  .sidebar::-webkit-scrollbar{ width: 6px; }
+  .sidebar::-webkit-scrollbar-track{ background: rgba(255, 255, 255, 0.03); }
+  .sidebar::-webkit-scrollbar-thumb{ border-width: 1px; }
+
+  /* ---------- 页面主体 ---------- */
+  .page{ max-width: 780px; margin: 0 auto; padding: 42px 30px 84px; }
+
+  /* ---------- 页首：标题 + 小标题 ---------- */
+  .hero{ text-align:center; padding: 2px 0 18px; }
+  .site-title{
+    font-family: var(--serif); font-weight: 700;
+    font-size: clamp(28px, 4vw, 38px);
+    letter-spacing: 0.18em; text-indent: 0.18em;
+    color: #f2f4f9;
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5); /* 仅保证背景图上的可读性 */
+  }
+  .site-subtitle{
+    margin-top: 8px; font-family: var(--serif); font-style: italic;
+    font-size: clamp(13px, 1.8vw, 16px);
+    letter-spacing: 0.14em; text-indent: 0.14em;
+    color: var(--accent);
+  }
+  .site-subtitle sup{ font-size: 0.62em; }
+  .hero-rule{ height: 1px; margin-top: 18px; background: var(--border); }
+
+  /* ---------- 面板与区块标题 ---------- */
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+  }
+  .section{ margin-top: 36px; }
+  .section-title{
+    font-family: var(--serif); font-size: 18px; font-weight: 600;
+    letter-spacing: 0.1em; color: var(--text);
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  }
+  .section-title::after{ content:""; flex:1; height:1px; background: var(--border); }
+
+  /* ---------- 说明区（预留空间） ---------- */
+  .intro-body{ min-height: 120px; color: var(--text-dim); font-size: 15px; }
+  .intro-body p + p{ margin-top: 8px; }
+  .intro-placeholder{ color: rgba(154, 165, 184, 0.6); }
+
+  /* ---------- 笔记列表 ---------- */
+  .note-list{ display: flex; flex-direction: column; gap: 12px; }
+  .note-card{
+    display: flex; gap: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 22px;
+    transition: border-color 0.2s ease;
+  }
+  .note-card:hover{ border-color: var(--border-strong); }
+  .note-index{
+    font-size: 13px; line-height: 1.8;
+    color: var(--text-dim); min-width: 24px;
+    font-variant-numeric: tabular-nums;
+  }
+  .note-title{ font-family: var(--serif); font-size: 17px; font-weight: 600; }
+  .note-title a{ color: var(--text); text-decoration: none; }
+  .note-title a:hover{ color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+  .note-meta{ margin-top: 4px; font-size: 12.5px; color: var(--text-dim); }
+  .note-desc{ margin-top: 8px; font-size: 14px; color: var(--text-dim); }
+  .note-cta{
+    display: inline-block; margin-top: 12px;
+    font-size: 13.5px; color: var(--accent); text-decoration: none;
+    border-bottom: 1px solid rgba(195, 162, 106, 0.45);
+  }
+  .note-cta:hover{ border-bottom-color: var(--accent); }
+  /* 多个附件链接：每个独占一行，左对齐，下划线只包住文字 */
+  .note-files{ display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 2px; }
+  .note-nofile{ display: inline-block; margin-top: 12px; font-size: 13.5px; color: var(--text-dim); }
+  .note-empty{
+    padding: 24px; text-align: center; font-size: 14px; color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: 8px;
+  }
+
+  /* ---------- 右侧固定：友情链接 ---------- */
+  .sidebar{
+    position: fixed; top: 42px; right: 28px;
+    width: 200px; max-height: calc(100vh - 84px); overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .sidebar-title{
+    font-family: var(--serif); font-size: 15px; font-weight: 600;
+    letter-spacing: 0.12em; color: var(--text);
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .link-list{ list-style: none; margin-top: 2px; }
+  .link-list li{ border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+  .link-list li:last-child{ border-bottom: none; }
+  .link-list a{ display: block; padding: 9px 0; text-decoration: none; color: var(--text); font-size: 13.5px; transition: color 0.15s ease; }
+  .link-list a:hover{ color: var(--accent); }
+  .link-desc{ display: block; margin-top: 1px; font-size: 11.5px; color: var(--text-dim); }
+
+  /* ---------- 页脚 ---------- */
+  .footer{ margin-top: 60px; text-align: center; color: rgba(154, 165, 184, 0.6); font-size: 12.5px; }
+
+  /* ---------- 响应式 ---------- */
+  /* 视口较窄时，居中的主体会与右侧悬浮栏接近，友情链接收起为底部横排链接栏 */
+  @media (max-width: 1280px){
+    .page{ padding: 36px 22px 64px; }
+    .sidebar{ position: static; width: auto; max-width: 780px; margin: 0 auto 28px; max-height: none; }
+    .link-list{ display: flex; flex-wrap: wrap; gap: 2px 22px; }
+    .link-list li{ border-bottom: none; }
+    .link-list a{ padding: 6px 0; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ================= 主体内容 ================= -->
+  <main class="page">
+
+    <!-- 页首：标题 + 小标题 -->
+    <header class="hero">
+      <h1 class="site-title">物理笔记</h1>
+      <p class="site-subtitle">by h<sup>2</sup>q</p>
+      <div class="hero-rule"></div>
+    </header>
+
+    <!-- 说明区（已预留空间，文字在 SITE_CONFIG.intro 中维护） -->
+    <section class="section panel" id="intro">
+      <h2 class="section-title">刊物说明</h2>
+      <div class="intro-body" id="intro-body"></div>
+    </section>
+
+    <!-- 笔记区：小标题 + PDF 链接列表 -->
+    <section class="section" id="notes">
+      <h2 class="section-title">笔记</h2>
+      <div class="note-list" id="note-list"></div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+      <p>© <span id="year"></span> 物理笔记 · by h<sup>2</sup>q</p>
+    </footer>
+  </main>
+
+  <!-- ================= 右侧固定：友情链接 ================= -->
+  <aside class="sidebar" aria-label="友情链接">
+    <h2 class="sidebar-title">友情链接</h2>
+    <ul class="link-list" id="link-list"></ul>
+  </aside>
+
+<script>
+/* ============================================================
+ * 站点配置 —— 日常维护只需要改这一个对象
+ * ============================================================ */
+const SITE_CONFIG = {
+
+  /* 说明区文字：数组每个元素渲染为一段 */
+  intro: [
+    "《58学报》是一个由青岛五十八中毕业生郭嘉同学创办的，非官方的线上刊物，旨在聚焦于具体学科知识的深入阐释、拓展延伸，以及分享学习经验",
+    "学报默认采用周更形式，根据稿件数量动态调整。",
+    "本人为学报的供稿人之一，主要分享物理的相关知识和理解。考虑到公众号阅读不便，特将稿件整理于此，方便大家下载阅读。"
+  ],
+
+  /* 笔记列表：新增一篇笔记 = 复制一个 { ... } 并修改字段
+   *   title 笔记标题
+   *   date  日期或学期
+   *   tags  标签数组
+   *   desc  一句话简介
+   *   file  单个 PDF 路径（旧写法，仍可用）
+   *   files 多个附件：[{ name: 链接文字, path: 文件路径, dl: true 表示点击下载 }] */
+  notes: [
+    {
+      title: "虚功原理",
+      date: "2024-12-7",
+      tags: [],
+      desc: "",
+      file: "notes/虚功原理.pdf"
+    },
+    {
+      title: "微积分初步",
+      date: "2024-12-7",
+      tags: [],
+      desc: "",
+      file: "notes/微积分初步.pdf"
+    },
+    {
+      title: "力矩和角动量",
+      date: "2024-12-14",
+      tags: [],
+      desc: "",
+      file: "notes/力矩和角动量.pdf"
+    },
+    {
+      title: "非惯性系和惯性力",
+      date: "2025-1-25",
+      tags: [],
+      desc: "",
+      file: "notes/非惯性系和惯性力.pdf"
+    },
+    {
+      title: "质心",
+      date: "2025-2-08",
+      tags: [],
+      desc: "",
+      file: "notes/质心.pdf"
+    },
+    {
+      title: "天体运动",
+      date: "2025-2-22",
+      tags: [],
+      desc: "极坐标，开普勒三定律，比耐方程",
+      file: "notes/天体运动.pdf"
+    },
+    {
+      title: "杂项",
+      date: "2025-3-08",
+      tags: [],
+      desc: "自然坐标系，两体运动，有效势能，微振动",
+      file: "notes/杂项1.pdf"
+    },
+    {
+      title: "静电场",
+      date: "2025-3-29",
+      tags: [],
+      desc: "静电场，高斯定理",
+      file: "notes/静电场.pdf"
+    },
+    {
+      title: "静电场的能量",
+      date: "2025-5-10",
+      tags: [],
+      desc: "电势，电场能密度",
+      file: "notes/静电场的能量.pdf"
+    },
+    {
+      title: "电介质",
+      date: "2025-5-17",
+      tags: [],
+      desc: "电偶极子模型，极化",
+      file: "notes/电偶极子和电介质.pdf"
+    },
+    {
+      title: "配速法",
+      date: "2025-5-24",
+      tags: [],
+      desc: "为了在高考前发出，故没有按照正常顺序",
+      file: "notes/配速法.pdf"
+    },
+    {
+      title: "电容",
+      date: "2025-6-28",
+      tags: [],
+      desc: "电容，电容器",
+      file: "notes/电容.pdf"
+    },
+    {
+      title: "25年陕西卷压轴",
+      date: "2025-8-23",
+      tags: [],
+      desc: "纯粹蹭个时事，在此处发表并无逻辑可言",
+      file: "notes/陕西卷压轴.pdf"
+    },
+    {
+      title: "静磁场的性质",
+      date: "2025-9-6",
+      tags: [],
+      desc: "洛伦兹力和安培力的矢量叉乘形式",
+      file: "notes/静磁场.pdf"
+    },
+    {
+      title: "毕奥-萨法尔定律",
+      date: "2025-9-13",
+      tags: [],
+      desc: "毕奥萨法尔定律，安培环路定理",
+      file: "notes/毕奥萨法尔定律.pdf"
+    },
+    {
+      title: "电磁感应",
+      date: "2025-9-20",
+      tags: [],
+      desc: "法拉利电磁感应定律，动生和感生电动势辨析，电感",
+      file: "notes/电磁感应.pdf"
+    },
+    {
+      title: "麦克斯韦方程组",
+      date: "2025-10-11",
+      tags: [],
+      desc: "",
+      file: "notes/麦克斯韦方程组.pdf"
+    },
+    {
+      title: "磁矢势",
+      date: "2025-11-15",
+      tags: [],
+      desc: "磁矢势，正则动量，AB效应",
+      file: "notes/磁矢势.pdf"
+    },
+    {
+      title: "电子排布",
+      date: "2025-11-29和2025-12-13",
+      tags: [],
+      desc: "玻尔原子模型，电子分层结构",
+      files: [
+        { name: "阅读PDF", path: "notes/原子结构.pdf" },
+        { name: "阅读PDF", path: "notes/量子力学初步.zip" }
+      ]
+    },
+    {
+      title: "基尔霍夫方程组",
+      date: "2026-3-14",
+      tags: [],
+      desc: "注：从此期开始，排版由原先的LaTeX改为了公众号内嵌markdown",
+      files: [
+        { name: "阅读PDF", path: "notes/电路.pdf" },
+        { name: "markdown文件", path: "notes/电路.zip" }
+      ]
+    },
+    {
+      title: "微分方程初步",
+      date: "2026-5-16",
+      tags: [],
+      desc: "",
+      files: [
+        { name: "阅读PDF", path: "notes/微分方程初步.pdf" },
+        { name: "markdown文件", path: "notes/微分方程初步.zip" }
+      ]
+    },
+    {
+      title: "几何光学",
+      date: "2026-7-25",
+      tags: [],
+      desc: "绝对折射率，费马原理",
+      files: [
+        { name: "阅读PDF", path: "notes/几何光学.pdf" },
+        { name: "markdown文件", path: "notes/几何光学.zip" }
+      ]
+    },
+    {
+      title: "试探解",
+      date: "2026-10-4",
+      tags: [],
+      desc: "数列的特征根法，微分方程试探解",
+      files: [
+        { name: "阅读PDF", path: "notes/试探解.pdf" },
+        { name: "markdown文件", path: "notes/试探解.zip" }
+      ]
+    },
+
+
+
+  ],
+
+  /* 友情链接：name 链接名 / url 地址 / desc 小字描述 */
+  links: [
+    { name: "58学报",        url: "https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=Mzk0ODg4NDUwOA==&scene=124#wechat_redirect",              desc: "请复制到微信中打开" },
+    { name: "学报联系方式",   url: "https://mp.weixin.qq.com/s/wQLk5PkVmBzapk01gFFGuw",                              desc: "创始人邮箱：gj580210541@qq.com" }
+  ]
+};
+
+/* ============================================================
+ * 以下为渲染逻辑，一般无需修改
+ * ============================================================ */
+const $ = (sel, el = document) => el.querySelector(sel);
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[c]));
+}
+
+/* 渲染说明区 */
+function renderIntro(){
+  const box = $("#intro-body");
+  const paras = (SITE_CONFIG.intro || [])
+    .map(t => `<p>${escapeHtml(t)}</p>`).join("");
+  box.innerHTML = paras ||
+    `<p class="intro-placeholder">（说明文字预留区域：请在 SITE_CONFIG.intro 中补充）</p>`;
+}
+
+/* 把 file（旧：单个文件）和 files（新：多个文件）统一成附件列表 */
+function noteFiles(n){
+  if (Array.isArray(n.files) && n.files.length) return n.files;
+  return n.file ? [{ name: "阅读 PDF", path: n.file }] : [];
+}
+
+/* 渲染笔记列表 */
+function renderNotes(){
+  const list = $("#note-list");
+  const notes = SITE_CONFIG.notes || [];
+  if (!notes.length){
+    list.innerHTML = `<div class="note-empty">暂无笔记 —— 在 SITE_CONFIG.notes 中添加条目后即可显示。</div>`;
+    return;
+  }
+  list.innerHTML = notes.map((n, i) => {
+    const idx   = String(i + 1).padStart(2, "0");
+    const meta  = [n.date, ...(n.tags || [])].filter(Boolean).map(escapeHtml).join(" · ");
+    const files = noteFiles(n);
+    /* 只有一个附件时标题可点击；多个附件时标题为纯文本，附件在下方逐条列出 */
+    const titleHtml = files.length === 1
+      ? `<a href="${encodeURI(files[0].path || "#")}" target="_blank" rel="noopener">${escapeHtml(n.title || "未命名笔记")}</a>`
+      : escapeHtml(n.title || "未命名笔记");
+    /* 每个附件独占一行；dl: true 时点击直接下载（箭头用 ↓，否则 ↗ 新标签页打开） */
+    const links = files.length
+      ? `<div class="note-files">${files.map(f =>
+          `<a class="note-cta" href="${encodeURI(f.path || "#")}" target="_blank" rel="noopener"${f.dl ? " download" : ""}>${escapeHtml(f.name || "下载文件")}${f.dl ? " ↓" : " ↗"}</a>`
+        ).join("")}</div>`
+      : `<span class="note-nofile">暂无附件</span>`;
+    return `
+      <article class="note-card">
+        <div class="note-index">${idx}</div>
+        <div class="note-body">
+          <h3 class="note-title">${titleHtml}</h3>
+          <div class="note-meta">${meta}</div>
+          <p class="note-desc">${escapeHtml(n.desc || "")}</p>
+          ${links}
+        </div>
+      </article>`;
+  }).join("");
+}
+
+/* 渲染友情链接 */
+function renderLinks(){
+  const ul = $("#link-list");
+  const links = SITE_CONFIG.links || [];
+  ul.innerHTML = links.map(l => `
+    <li>
+      <a href="${escapeHtml(l.url || "#")}" target="_blank" rel="noopener">
+        <span class="link-name">${escapeHtml(l.name || "未命名链接")}</span>
+        ${l.desc ? `<span class="link-desc">${escapeHtml(l.desc)}</span>` : ""}
+      </a>
+    </li>`).join("");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderIntro();
+  renderNotes();
+  renderLinks();
+  $("#year").textContent = new Date().getFullYear();
+});
+</script>
+</body>
+</html>
